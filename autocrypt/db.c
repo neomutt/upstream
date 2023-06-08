@@ -489,8 +489,11 @@ int mutt_autocrypt_db_account_get_all(struct AutocryptAccount ***accounts, int *
   {
     if (results_count == results_len)
     {
+      const size_t cur_size = results_len * sizeof(struct AutocryptAccount *);
+      const size_t new_size = (results_len + 5) * sizeof(struct AutocryptAccount *);
+      mutt_mem_recalloc(&results, cur_size, new_size);
+
       results_len += 5;
-      mutt_mem_realloc(&results, results_len * sizeof(struct AutocryptAccount *));
     }
 
     struct AutocryptAccount *account = mutt_autocrypt_db_account_new();
