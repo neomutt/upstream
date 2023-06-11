@@ -106,16 +106,18 @@ void *mutt_mem_malloc(size_t size)
  * mutt_mem_realloc - Resize a block of memory on the heap
  * @param ptr Memory block to resize
  * @param size New size
+ * @retval ptr  Memory
+ * @retval NULL Size was 0
  *
  * @note On error, this function will never return NULL.
  *       It will print an error and exit the program.
  *
  * If the new size is zero, the block will be freed.
  */
-void mutt_mem_realloc(void *ptr, size_t size)
+void *mutt_mem_realloc(void *ptr, size_t size)
 {
   if (!ptr)
-    return;
+    return NULL;
 
   void **p = (void **) ptr;
 
@@ -126,7 +128,7 @@ void mutt_mem_realloc(void *ptr, size_t size)
       free(*p);
       *p = NULL;
     }
-    return;
+    return NULL;
   }
 
   void *r = realloc(*p, size);
@@ -137,6 +139,7 @@ void mutt_mem_realloc(void *ptr, size_t size)
   }
 
   *p = r;
+  return r;
 }
 
 /**
