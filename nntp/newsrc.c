@@ -91,8 +91,8 @@ static struct NntpMboxData *mdata_find(struct NntpAccountData *adata, const char
   /* add NntpMboxData to list */
   if (adata->groups_num >= adata->groups_max)
   {
+    mutt_mem_recallocarray(&adata->groups_list, adata->groups_max, adata->groups_max * 2, sizeof(mdata));
     adata->groups_max *= 2;
-    mutt_mem_realloc(&adata->groups_list, adata->groups_max * sizeof(mdata));
   }
   adata->groups_list[adata->groups_num++] = mdata;
 
@@ -344,8 +344,8 @@ void nntp_newsrc_gen_entries(struct Mailbox *m)
       {
         if (mdata->newsrc_len >= entries)
         {
+          mutt_mem_recallocarray(&mdata->newsrc_ent, entries, entries * 2, sizeof(struct NewsrcEntry));
           entries *= 2;
-          mutt_mem_realloc(&mdata->newsrc_ent, entries * sizeof(struct NewsrcEntry));
         }
         mdata->newsrc_ent[mdata->newsrc_len].first = first;
         mdata->newsrc_ent[mdata->newsrc_len].last = last - 1;
@@ -369,8 +369,8 @@ void nntp_newsrc_gen_entries(struct Mailbox *m)
   {
     if (mdata->newsrc_len >= entries)
     {
+      mutt_mem_recallocarray(&mdata->newsrc_ent, entries, entries + 1, sizeof(struct NewsrcEntry));
       entries++;
-      mutt_mem_realloc(&mdata->newsrc_ent, entries * sizeof(struct NewsrcEntry));
     }
     mdata->newsrc_ent[mdata->newsrc_len].first = first;
     mdata->newsrc_ent[mdata->newsrc_len].last = mdata->last_loaded;
@@ -464,8 +464,8 @@ int nntp_newsrc_update(struct NntpAccountData *adata)
     /* write newsgroup name */
     if ((off + strlen(mdata->group) + 3) > buflen)
     {
+      mutt_mem_recalloc(&buf, buflen, buflen * 2);
       buflen *= 2;
-      mutt_mem_realloc(&buf, buflen);
     }
     snprintf(buf + off, buflen - off, "%s%c ", mdata->group, mdata->subscribed ? ':' : '!');
     off += strlen(buf + off);
@@ -475,8 +475,8 @@ int nntp_newsrc_update(struct NntpAccountData *adata)
     {
       if ((off + 1024) > buflen)
       {
+        mutt_mem_recalloc(&buf, buflen, buflen * 2);
         buflen *= 2;
-        mutt_mem_realloc(&buf, buflen);
       }
       if (j)
         buf[off++] = ',';
@@ -665,8 +665,8 @@ int nntp_active_save_cache(struct NntpAccountData *adata)
 
     if ((off + strlen(mdata->group) + (mdata->desc ? strlen(mdata->desc) : 0) + 50) > buflen)
     {
+      mutt_mem_recalloc(&buf, buflen, buflen * 2);
       buflen *= 2;
-      mutt_mem_realloc(&buf, buflen);
     }
     snprintf(buf + off, buflen - off, "%s " ANUM_FMT " " ANUM_FMT " %c%s%s\n",
              mdata->group, mdata->last_message, mdata->first_message,
