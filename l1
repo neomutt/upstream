@@ -1,0 +1,25 @@
+gh pr list --search "merged:>2025-01-13"
+
+up to e474b0b94 merge: update translations
+
+73a0a275a trivial fixes
+427d0d5a9 fix mutt_debug()s missing newlines
+e0413d023 add enum StatusChars for $status_chars
+b9a11e87c factor out log_queue_save()
+484d4e74f key: tidy deps
+5de5efb6e refactor key binding dump functions
+c57d4e831 use STD*_FILENO
+2553d6f8b fuzz: tweak makefile to tidy main()
+e5366c98a tidy code
+b1c82c438 Use FreeBSD 14.2 in Cirrus CI (#4573)
+646a6e2ff Fix NULL pointer dereference when calling imap_logout_all()
+bcd3c8b03 improve localise_config()
+66455121b fix array leak in the verify certificate dialog
+
+* 488052057 commands: simplify commands_register()
+* 9f99c4566 commands: use const pointers
+* c657daf48 commands: move to NeoMutt
+merge: refactor NeoMutt commands
+
+66214f885 neomutt: home_dir, username, env
+ace867087 main: drop -B (batch mode) option
