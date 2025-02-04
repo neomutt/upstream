@@ -898,76 +898,8 @@ enum CommandResult set_dump(enum GetElemListFlags flags, struct Buffer *err)
   struct Buffer *tmp = buf_pool_get();
 
   struct HashElemArray hea = get_elem_list(NeoMutt->sub->cs, flags);
-  struct HashElem **hep = NULL;
-  struct HashElem *he = NULL;
-  const struct ConfigDef *cdef = NULL;
-  int type;
 
-  // measure the width of the config names
-  int width = 0;
-  ARRAY_FOREACH(hep, &hea)
-  {
-    he = *hep;
-    if (he->type & D_INTERNAL_DEPRECATED)
-      continue;
-    type = CONFIG_TYPE(he->type);
-    if (type == DT_SYNONYM)
-      continue;
-
-    cdef = he->data;
-    width = MAX(width, mutt_str_len(cdef->name));
-  }
-
-  int len;
-  ARRAY_FOREACH(hep, &hea)
-  {
-    he = *hep;
-    if (he->type & D_INTERNAL_DEPRECATED)
-      continue;
-    type = CONFIG_TYPE(he->type);
-    if (type == DT_SYNONYM)
-      continue;
-
-    cdef = he->data;
-
-    struct PagedLine *pl = paged_file_new_line(pf);
-
-    // set config =
-    paged_line_add_colored_text(pl, MT_COLOR_FUNCTION, "set");
-    paged_line_add_text(pl, " ");
-    len = paged_line_add_colored_text(pl, MT_COLOR_IDENTIFIER, cdef->name);
-    buf_printf(tmp, "%*s", width - len + 1, "");
-    paged_line_add_text(pl, buf_string(tmp));
-    paged_line_add_colored_text(pl, MT_COLOR_OPERATOR, "=");
-    paged_line_add_text(pl, " ");
-
-    buf_reset(value);
-    cs_subset_he_string_get(NeoMutt->sub, he, value);
-
-    if (((type == DT_PATH) || IS_MAILBOX(he->type)) && (value->data[0] == '/'))
-      mutt_pretty_mailbox(value->data, value->dsize);
-
-    // Quote/escape the values of config options NOT of these types
-    if ((type != DT_BOOL) && (type != DT_NUMBER) && (type != DT_LONG) &&
-        (type != DT_QUAD) && (type != DT_ENUM) && (type != DT_SORT))
-    {
-      buf_reset(tmp);
-      pretty_var(value->data, tmp);
-      buf_strcpy(value, tmp->data);
-    }
-
-    int cid;
-    if ((type == DT_BOOL) || (type == DT_ENUM) || (type == DT_QUAD) || (type == DT_SORT))
-      cid = MT_COLOR_ENUM;
-    else if ((type == DT_LONG) || (type == DT_NUMBER))
-      cid = MT_COLOR_NUMBER;
-    else
-      cid = MT_COLOR_STRING;
-
-    paged_line_add_colored_text(pl, cid, buf_string(value));
-    paged_line_add_newline(pl);
-  }
-  ARRAY_FREE(&hea);
+  dump_config2(NeoMutt->sub->cs, &hea, CS_DUMP_ALIGN_TEXT | CS_DUMP_HIDE_SENSITIVE, pf);
 
   // Apply striping
   struct PagedLine *pl = NULL;
