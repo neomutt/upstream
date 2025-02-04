@@ -61,8 +61,8 @@ void color_log_color_attrs(struct AttrColor *ac, struct Buffer *swatch)
     buf_add_printf(swatch, "\033[1m");
   if (ac->attrs & A_ITALIC)
     buf_add_printf(swatch, "\033[3m");
-  if (ac->attrs == A_NORMAL)
-    buf_add_printf(swatch, "\033[0m");
+  // if (ac->attrs == A_NORMAL)
+  //   buf_add_printf(swatch, "\033[0m");
   if (ac->attrs & A_REVERSE)
     buf_add_printf(swatch, "\033[7m");
   if (ac->attrs & A_STANDOUT)
@@ -124,7 +124,7 @@ void color_log_color_attrs(struct AttrColor *ac, struct Buffer *swatch)
     }
   }
 
-  buf_addstr(swatch, "XXXXXX\033[0m");
+  // buf_addstr(swatch, "XXXXXX\033[0m");
 }
 
 /**

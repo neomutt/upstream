@@ -1395,7 +1395,7 @@ int main(int argc, char *argv[], char *envp[])
 
     ConfigDumpFlags cdflags = CS_DUMP_NO_FLAGS;
     if (tty)
-      cdflags |= CS_DUMP_LINK_DOCS;
+      cdflags |= CS_DUMP_ANSI_COLOUR | CS_DUMP_LINK_DOCS;
     if (hide_sensitive)
       cdflags |= CS_DUMP_HIDE_SENSITIVE;
     if (one_liner)
@@ -1413,7 +1413,9 @@ int main(int argc, char *argv[], char *envp[])
       rc = get_elem_queries(&queries, &hea);
     }
 
-    dump_config(cs, &hea, cdflags, stdout);
+    struct PagedFile *pf = paged_file_new(stdout);
+    dump_config2(cs, &hea, cdflags, pf);
+    paged_file_free(&pf);
     ARRAY_FREE(&hea);
     goto main_curses;
   }
