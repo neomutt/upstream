@@ -204,14 +204,11 @@ static enum CommandResult parse_object(struct Buffer *buf, struct Buffer *s,
 static enum CommandResult parse_uncolor_command(struct Buffer *buf, struct Buffer *s,
                                                 struct Buffer *err, bool uncolor)
 {
-  if (OptNoCurses) // No GUI, so quietly discard the command
+  while (MoreArgs(s))
   {
-    while (MoreArgs(s))
-    {
-      parse_extract_token(buf, s, TOKEN_NO_FLAGS);
-    }
-    return MUTT_CMD_SUCCESS;
+    parse_extract_token(buf, s, TOKEN_NO_FLAGS);
   }
+  return MUTT_CMD_SUCCESS;
 
   parse_extract_token(buf, s, TOKEN_NO_FLAGS);
 
@@ -441,14 +438,11 @@ done:
 enum CommandResult parse_uncolor(struct Buffer *buf, struct Buffer *s,
                                  intptr_t data, struct Buffer *err)
 {
-  if (OptNoCurses) // No GUI, so quietly discard the command
+  while (MoreArgs(s))
   {
-    while (MoreArgs(s))
-    {
-      parse_extract_token(buf, s, TOKEN_NO_FLAGS);
-    }
-    return MUTT_CMD_SUCCESS;
+    parse_extract_token(buf, s, TOKEN_NO_FLAGS);
   }
+  return MUTT_CMD_SUCCESS;
 
   color_debug(LL_DEBUG5, "parse: %s\n", buf_string(buf));
   enum CommandResult rc = parse_uncolor_command(buf, s, err, true);
@@ -471,8 +465,8 @@ enum CommandResult parse_unmono(struct Buffer *buf, struct Buffer *s,
 enum CommandResult parse_color(struct Buffer *buf, struct Buffer *s,
                                intptr_t data, struct Buffer *err)
 {
-  // No GUI, or no colours, so quietly discard the command
-  if (OptNoCurses || (COLORS == 0))
+  // No colours, so quietly discard the command
+  if (COLORS == 0)
   {
     while (MoreArgs(s))
     {
@@ -492,8 +486,8 @@ enum CommandResult parse_color(struct Buffer *buf, struct Buffer *s,
 enum CommandResult parse_mono(struct Buffer *buf, struct Buffer *s,
                               intptr_t data, struct Buffer *err)
 {
-  // No GUI, or colours available, so quietly discard the command
-  if (OptNoCurses || (COLORS != 0))
+  // No colours available, so quietly discard the command
+  if (COLORS != 0)
   {
     while (MoreArgs(s))
     {
