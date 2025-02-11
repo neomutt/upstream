@@ -197,6 +197,8 @@
 #include "mutt_lua.h"
 #endif
 
+struct NeoMutt *NeoMutt = NULL; ///< Global NeoMutt object
+
 bool StartupComplete = false; ///< When the config has been read
 
 // clang-format off
@@ -209,6 +211,54 @@ typedef uint8_t CliFlags;         ///< Flags for command line options, e.g. #MUT
 #define MUTT_CLI_SELECT  (1 << 4) ///< -y Start with a list of all mailboxes
 #define MUTT_CLI_NEWS    (1 << 5) ///< -g/-G Start with a list of all newsgroups
 // clang-format on
+
+// clang-format off
+extern const struct Module ModuleMain;
+extern const struct Module ModuleAddress;  extern const struct Module ModuleAlias;    extern const struct Module ModuleAttach;   extern const struct Module ModuleAutocrypt;
+extern const struct Module ModuleBcache;   extern const struct Module ModuleBrowser;  extern const struct Module ModuleColor;    extern const struct Module ModuleComplete;
+extern const struct Module ModuleCompmbox; extern const struct Module ModuleCompose;  extern const struct Module ModuleCompress; extern const struct Module ModuleConfig;
+extern const struct Module ModuleConn;     extern const struct Module ModuleConvert;  extern const struct Module ModuleCore;     extern const struct Module ModuleEditor;
+extern const struct Module ModuleEmail;    extern const struct Module ModuleEnvelope; extern const struct Module ModuleExpando;  extern const struct Module ModuleGui;
+extern const struct Module ModuleHcache;   extern const struct Module ModuleHelpbar;  extern const struct Module ModuleHistory;  extern const struct Module ModuleImap;
+extern const struct Module ModuleIndex;    extern const struct Module ModuleKey;      extern const struct Module ModuleMaildir;  extern const struct Module ModuleMbox;
+extern const struct Module ModuleMenu;     extern const struct Module ModuleMh;       extern const struct Module ModuleMutt;     extern const struct Module ModuleNcrypt;
+extern const struct Module ModuleNntp;     extern const struct Module ModuleNotmuch;  extern const struct Module ModulePager;    extern const struct Module ModuleParse;
+extern const struct Module ModulePattern;  extern const struct Module ModulePop;      extern const struct Module ModulePostpone; extern const struct Module ModuleProgress;
+extern const struct Module ModuleQuestion; extern const struct Module ModuleSend;     extern const struct Module ModuleSidebar;  extern const struct Module ModuleStore;
+// clang-format on
+
+/**
+ * Modules - All the library Modules
+ */
+static const struct Module *Modules[] = {
+  // clang-format off
+  &ModuleMain,     &ModuleGui,      // These two have priority
+  &ModuleAddress,  &ModuleAlias,    &ModuleAttach,   &ModuleBcache,   &ModuleBrowser,
+  &ModuleColor,    &ModuleComplete, &ModuleCompmbox, &ModuleCompose,  &ModuleConfig,
+  &ModuleConn,     &ModuleConvert,  &ModuleCore,     &ModuleEditor,   &ModuleEmail,
+  &ModuleEnvelope, &ModuleExpando,  &ModuleHelpbar,  &ModuleHistory,  &ModuleImap,
+  &ModuleIndex,    &ModuleKey,      &ModuleMaildir,  &ModuleMbox,     &ModuleMenu,
+  &ModuleMh,       &ModuleMutt,     &ModuleNcrypt,   &ModuleNntp,     &ModulePager,
+  &ModuleParse,    &ModulePattern,  &ModulePop,      &ModulePostpone, &ModuleProgress,
+  &ModuleQuestion, &ModuleSend,     &ModuleSidebar,
+// clang-format on
+#ifdef USE_AUTOCRYPT
+  &ModuleAutocrypt,
+#endif
+#ifdef USE_HCACHE_COMPRESSION
+  &ModuleCompress,
+#endif
+#ifdef USE_HCACHE
+  &ModuleHcache,
+#endif
+#ifdef USE_NOTMUCH
+  &ModuleNotmuch,
+#endif
+#ifdef USE_HCACHE
+  &ModuleStore,
+#endif
+  NULL,
+};
 
 /**
  * execute_commands - Execute a set of NeoMutt commands
@@ -865,30 +915,6 @@ static int start_curses(void)
 }
 
 /**
- * init_locale - Initialise the Locale/NLS settings
- */
-static void init_locale(void)
-{
-  setlocale(LC_ALL, "");
-
-#ifdef ENABLE_NLS
-  const char *domdir = mutt_str_getenv("TEXTDOMAINDIR");
-  if (domdir)
-    bindtextdomain(PACKAGE, domdir);
-  else
-    bindtextdomain(PACKAGE, MUTTLOCALEDIR);
-  textdomain(PACKAGE);
-#endif
-#ifndef LOCALES_HACK
-  /* Do we have a locale definition? */
-  if (mutt_str_getenv("LC_ALL") || mutt_str_getenv("LANG") || mutt_str_getenv("LC_CTYPE"))
-  {
-    OptLocales = true;
-  }
-#endif
-}
-
-/**
  * get_user_info - Find the user's name, home and shell
  * @param cs Config Set
  * @retval true Success
@@ -1175,6 +1201,12 @@ int main(int argc, char *argv[], char *envp[])
   struct ConfigSet *cs = NULL;
   struct CommandLine *cli = command_line_new();
 
+  NeoMutt = neomutt_new();
+  if (!neomutt_init(NeoMutt, Modules))
+    goto main_curses;
+
+  cs = NeoMutt->sub->cs;
+
   MuttLogger = log_disp_terminal;
 
   /* sanity check against stupid administrators */
@@ -1184,7 +1216,14 @@ int main(int argc, char *argv[], char *envp[])
     goto main_exit; // TEST01: neomutt (as root, chgrp mail neomutt; chmod +s neomutt)
   }
 
-  init_locale();
+#ifndef LOCALES_HACK
+  /* Do we have a locale definition? */
+  if (mutt_str_getenv("LC_ALL") || mutt_str_getenv("LANG") || mutt_str_getenv("LC_CTYPE"))
+  {
+    OptLocales = true;
+  }
+#endif
+
   OptGui = true;
 
   cs = cs_new(500);
@@ -1199,6 +1238,9 @@ int main(int argc, char *argv[], char *envp[])
 
   if (!show_help(&cli->help))
     goto main_exit;
+
+  mutt_str_replace(&NeoMutt->username, mutt_str_getenv("USER"));
+  mutt_str_replace(&NeoMutt->home_dir, mutt_str_getenv("HOME"));
 
   // Change the current umask, and save the original one
   NeoMutt->user_default_umask = umask(077);
